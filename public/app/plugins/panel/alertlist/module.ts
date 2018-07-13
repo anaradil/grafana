@@ -21,6 +21,8 @@ class AlertListPanel extends PanelCtrl {
   currentAlerts: any = [];
   alertHistory: any = [];
   noAlertsMessage: string;
+  audio: any;
+  lastRefreshAt: any;
 
   // Set and populate defaults
   panelDefaults = {
@@ -32,6 +34,7 @@ class AlertListPanel extends PanelCtrl {
     dashboardFilter: '',
     nameFilter: '',
     folderId: null,
+    sound: false,
   };
 
   /** @ngInject */
@@ -45,6 +48,10 @@ class AlertListPanel extends PanelCtrl {
     for (let key in this.panel.stateFilter) {
       this.stateFilter[this.panel.stateFilter[key]] = true;
     }
+
+    this.audio = new Audio();
+    this.audio.src = 'public/sound/sound1.mp3';
+    this.lastRefreshAt = moment();
   }
 
   sortResult(alerts) {
@@ -90,6 +97,7 @@ class AlertListPanel extends PanelCtrl {
 
     getAlertsPromise.then(() => {
       this.renderingCompleted();
+      this.lastRefreshAt = moment();
     });
   }
 
@@ -127,6 +135,7 @@ class AlertListPanel extends PanelCtrl {
   }
 
   getCurrentAlertState() {
+    var soundFlag = false;
     var params: any = {
       state: this.panel.stateFilter,
     };
@@ -165,7 +174,18 @@ class AlertListPanel extends PanelCtrl {
         this.currentAlerts = this.currentAlerts.slice(0, this.panel.limit);
       }
       this.noAlertsMessage = this.currentAlerts.length === 0 ? 'No alerts' : '';
-
+      for (let _ in this.currentAlerts) {
+        var alert = this.currentAlerts[_];
+        var newStateDate = moment(alert.newStateDate).locale('en');
+        if (this.lastRefreshAt < newStateDate && alert.stateModel.text === 'ALERTING') {
+          soundFlag = true;
+        }
+      }
+      if (soundFlag && this.panel.sound) {
+        console.log('Sound playing');
+        this.audio.load();
+        this.audio.play();
+      }
       return this.currentAlerts;
     });
   }
