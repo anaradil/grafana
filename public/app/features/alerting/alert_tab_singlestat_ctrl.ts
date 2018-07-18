@@ -5,7 +5,7 @@ import alertDef from './alert_def';
 import config from 'app/core/config';
 import appEvents from 'app/core/app_events';
 
-export class AlertTabCtrl {
+export class AlertTabSingleStatCtrl {
   panel: any;
   panelCtrl: any;
   testing: boolean;
@@ -48,29 +48,31 @@ export class AlertTabCtrl {
 
   $onInit() {
     this.addNotificationSegment = this.uiSegmentSrv.newPlusButton();
-
+    console.log('Control panel', this.panelCtrl);
     // subscribe to graph threshold handle changes
-    var thresholdChangedEventHandler = this.graphThresholdChanged.bind(this);
-    this.panelCtrl.events.on('threshold-changed', thresholdChangedEventHandler);
-
+    //var thresholdChangedEventHandler = this.graphThresholdChanged.bind(this);
+    this.panelCtrl.events.on('singlestat-threshold-changed', this.handleDataChange.bind(this));
     // set panel alert edit mode
-    this.$scope.$on('$destroy', () => {
-      this.panelCtrl.events.off('threshold-changed', thresholdChangedEventHandler);
-      this.panelCtrl.editingThresholds = false;
-      this.panelCtrl.render();
-    });
+    //this.$scope.$on('$destroy', () => {
+    //this.panelCtrl.events.off('data-received', thresholdChangedEventHandler);
+    //this.panelCtrl.editingThresholds = false;
+    //this.panelCtrl.render();
+    //});
 
     // build notification model
     this.notifications = [];
     this.alertNotifications = [];
     this.alertHistory = [];
-
+    console.log('onInitAlertTab', this.panel);
     return this.backendSrv.get('/api/alert-notifications').then(res => {
       this.notifications = res;
-      console.log('backendSrv response', res);
       this.initModel();
       this.validateModel();
     });
+  }
+
+  handleDataChange(data) {
+    console.log('Data was received', data);
   }
 
   getAlertHistory() {
@@ -158,10 +160,10 @@ export class AlertTabCtrl {
     if (!alert) {
       return;
     }
-    console.log('Graph alert', alert);
+    console.log('initModel', alert, this);
     alert.conditions = alert.conditions || [];
     if (alert.conditions.length === 0) {
-      alert.conditions.push(this.buildDefaultCondition());
+      alert.conditions.push(this.buildDefaultCondition.bind(this));
     }
 
     alert.noDataState = alert.noDataState || 'no_data';
@@ -172,6 +174,7 @@ export class AlertTabCtrl {
 
     var defaultName = this.panel.title + ' alert';
     alert.name = alert.name || defaultName;
+    alert.conditions = this.buildDefaultCondition();
 
     this.conditionModels = _.reduce(
       alert.conditions,
@@ -182,8 +185,8 @@ export class AlertTabCtrl {
       []
     );
 
-    ThresholdMapper.alertToGraphThresholds(this.panel);
-
+    //ThresholdMapper.alertToSingleStatThresholds(this.panel);
+    console.log('initAlert', alert);
     for (let addedNotification of alert.notifications) {
       var model = _.find(this.notifications, { id: addedNotification.id });
       if (model && model.isDefault === false) {
@@ -200,7 +203,7 @@ export class AlertTabCtrl {
       }
     }
 
-    this.panelCtrl.editingThresholds = true;
+    //this.panelCtrl.editingThresholds = true;
     this.panelCtrl.render();
   }
 
@@ -215,11 +218,13 @@ export class AlertTabCtrl {
   }
 
   buildDefaultCondition() {
+    var t = this.panel.thresholds.split(',');
+    console.log('Building default alert', this.panel.thresholds, t);
     return {
       type: 'query',
       query: { params: ['A', '5m', 'now'] },
       reducer: { type: 'avg', params: [] },
-      evaluator: { type: 'gt', params: [null] },
+      evaluator: { type: 'gt', params: t },
       operator: { type: 'and' },
     };
   }
@@ -271,7 +276,7 @@ export class AlertTabCtrl {
 
   buildConditionModel(source) {
     var cm: any = { source: source, type: source.type };
-    console.log('graph', source);
+    console.log('building conditional model', cm);
     cm.queryPart = new QueryPart(source.query, alertDef.alertQueryDef);
     cm.reducerPart = alertDef.createReducerPart(source.reducer);
     cm.evaluator = source.evaluator;
@@ -352,6 +357,7 @@ export class AlertTabCtrl {
   }
 
   enable() {
+    //check if thresholds are entered. if not create error
     this.panel.alert = {};
     this.initModel();
   }
@@ -405,7 +411,7 @@ export class AlertTabCtrl {
   test() {
     this.testing = true;
     this.testResult = false;
-
+    console.log('Rule testing', this);
     var payload = {
       dashboard: this.dashboardSrv.getCurrent().getSaveModelClone(),
       panelId: this.panelCtrl.panel.id,
@@ -419,12 +425,12 @@ export class AlertTabCtrl {
 }
 
 /** @ngInject */
-export function alertTab() {
+export function alertTabSingleStat() {
   'use strict';
   return {
     restrict: 'E',
     scope: true,
-    templateUrl: 'public/app/features/alerting/partials/alert_tab.html',
-    controller: AlertTabCtrl,
+    templateUrl: 'public/app/features/alerting/partials/alert_tab_singlestat.html',
+    controller: AlertTabSingleStatCtrl,
   };
 }
