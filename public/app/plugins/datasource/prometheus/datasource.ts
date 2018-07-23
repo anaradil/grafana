@@ -17,11 +17,17 @@ export function alignRange(start, end, step) {
 }
 
 export function prometheusRegularEscape(value) {
-  return value.replace(/'/g, "\\\\'");
+  if (typeof value === 'string') {
+    return value.replace(/'/g, "\\\\'");
+  }
+  return value;
 }
 
 export function prometheusSpecialRegexEscape(value) {
-  return prometheusRegularEscape(value.replace(/\\/g, '\\\\\\\\').replace(/[$^*{}\[\]+?.()]/g, '\\\\$&'));
+  if (typeof value === 'string') {
+    return prometheusRegularEscape(value.replace(/\\/g, '\\\\\\\\').replace(/[$^*{}\[\]+?.()]/g, '\\\\$&'));
+  }
+  return value;
 }
 
 export class PrometheusDatasource {
@@ -357,6 +363,7 @@ export class PrometheusDatasource {
       state = {
         ...state,
         queries,
+        datasource: this.name,
       };
     }
     return state;
