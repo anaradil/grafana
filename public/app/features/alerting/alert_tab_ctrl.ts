@@ -176,6 +176,7 @@ export class AlertTabCtrl {
     this.conditionModels = _.reduce(
       alert.conditions,
       (memo, value) => {
+        console.log('Graph condition values', value);
         memo.push(this.buildConditionModel(value));
         return memo;
       },

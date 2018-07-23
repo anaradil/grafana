@@ -28,6 +28,7 @@ func (e *DefaultEvalHandler) Eval(context *EvalContext) {
 
 	for i := 0; i < len(context.Rule.Conditions); i++ {
 		condition := context.Rule.Conditions[i]
+		//log.Debug("Evaluating conditions", "Condition", condition)
 		cr, err := condition.Eval(context)
 		if err != nil {
 			context.Error = err
