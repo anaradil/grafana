@@ -52,6 +52,7 @@ export class AlertTabSingleStatCtrl {
     // subscribe to graph threshold handle changes
     //var thresholdChangedEventHandler = this.graphThresholdChanged.bind(this);
     this.panelCtrl.events.on('singlestat-threshold-changed', this.handleDataChange.bind(this));
+    this.panelCtrl.events.on('delete-singlestat-alert', this.delete.bind(this));
     // set panel alert edit mode
     //this.$scope.$on('$destroy', () => {
     //this.panelCtrl.events.off('data-received', thresholdChangedEventHandler);
@@ -73,6 +74,7 @@ export class AlertTabSingleStatCtrl {
 
   handleDataChange(data) {
     console.log('Data was received', data);
+    //this.backendSrv();
   }
 
   getAlertHistory() {
@@ -162,8 +164,9 @@ export class AlertTabSingleStatCtrl {
     }
     console.log('initModel', alert, this);
     alert.conditions = alert.conditions || [];
+    this.buildDefaultCondition.bind(this);
     if (alert.conditions.length === 0) {
-      alert.conditions.push(this.buildDefaultCondition.bind(this));
+      alert.conditions.push(this.buildDefaultCondition());
     }
 
     alert.noDataState = alert.noDataState || 'no_data';
@@ -174,7 +177,7 @@ export class AlertTabSingleStatCtrl {
 
     var defaultName = this.panel.title + ' alert';
     alert.name = alert.name || defaultName;
-    alert.conditions = this.buildDefaultCondition();
+    //alert.conditions = this.buildDefaultCondition();
 
     this.conditionModels = _.reduce(
       alert.conditions,
@@ -218,14 +221,19 @@ export class AlertTabSingleStatCtrl {
   }
 
   buildDefaultCondition() {
-    var t = this.panel.thresholds.split(',');
-    console.log('Building default alert', this.panel.thresholds, t);
+    var thresholds = this.panel.thresholds.split(',').map(Number);
+    var evaluator = { type: 'gt', params: [] };
+    if (thresholds.length === 1) {
+      evaluator = { type: 'gt', params: thresholds };
+    } else if (thresholds.length === 2) {
+      evaluator = { type: 'gt', params: thresholds };
+    }
     return {
       type: 'query',
       query: { params: ['A', '5m', 'now'] },
       reducer: { type: 'avg', params: [] },
-      evaluator: { type: 'gt', params: t },
       operator: { type: 'and' },
+      evaluator,
     };
   }
 
@@ -325,19 +333,6 @@ export class AlertTabSingleStatCtrl {
     }
   }
 
-  addCondition(type) {
-    var condition = this.buildDefaultCondition();
-    // add to persited model
-    this.alert.conditions.push(condition);
-    // add to view model
-    this.conditionModels.push(this.buildConditionModel(condition));
-  }
-
-  removeCondition(index) {
-    this.alert.conditions.splice(index, 1);
-    this.conditionModels.splice(index, 1);
-  }
-
   delete() {
     appEvents.emit('confirm-modal', {
       title: 'Delete Alert',
@@ -364,19 +359,18 @@ export class AlertTabSingleStatCtrl {
 
   evaluatorParamsChanged() {
     ThresholdMapper.alertToGraphThresholds(this.panel);
+
     this.panelCtrl.render();
   }
 
   evaluatorTypeChanged(evaluator) {
     // ensure params array is correct length
     switch (evaluator.type) {
-      case 'lt':
       case 'gt': {
         evaluator.params = [evaluator.params[0]];
         break;
       }
-      case 'within_range':
-      case 'outside_range': {
+      case 'within_range': {
         evaluator.params = [evaluator.params[0], evaluator.params[1]];
         break;
       }
@@ -384,7 +378,6 @@ export class AlertTabSingleStatCtrl {
         evaluator.params = [];
       }
     }
-
     this.evaluatorParamsChanged();
   }
 
@@ -416,7 +409,7 @@ export class AlertTabSingleStatCtrl {
       dashboard: this.dashboardSrv.getCurrent().getSaveModelClone(),
       panelId: this.panelCtrl.panel.id,
     };
-
+    console.log('Rule testing payload', payload);
     return this.backendSrv.post('/api/alerts/test', payload).then(res => {
       this.testResult = res;
       this.testing = false;

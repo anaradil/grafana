@@ -46,6 +46,7 @@ var reducerTypes = [
   { text: 'diff()', value: 'diff' },
   { text: 'percent_diff()', value: 'percent_diff' },
   { text: 'count_non_null()', value: 'count_non_null' },
+  { text: 'none', value: 'none' },
 ];
 
 var noDataModes = [

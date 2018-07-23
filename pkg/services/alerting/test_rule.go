@@ -48,10 +48,9 @@ func handleAlertTestCommand(cmd *AlertTestCommand) error {
 
 func testAlertRule(rule *Rule) *EvalContext {
 	handler := NewEvalHandler()
-
 	context := NewEvalContext(context.Background(), rule)
 	context.IsTestRun = true
-
+	fmt.Println("context", context.Ctx.Value)
 	handler.Eval(context)
 	context.Rule.State = context.GetNewState()
 

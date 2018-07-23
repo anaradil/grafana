@@ -127,7 +127,6 @@ func NewRuleFromDBAlert(ruleDef *m.Alert) (*Rule, error) {
 	if len(model.Conditions) == 0 {
 		return nil, fmt.Errorf("Alert is missing conditions")
 	}
-
 	return model, nil
 }
 

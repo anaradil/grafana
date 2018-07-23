@@ -126,7 +126,11 @@ class SingleStatCtrl extends MetricsPanelCtrl {
 
   onThresholdChanged() {
     console.log('new threshold values', this.panel.thresholds);
-    this.events.emit('singlestat-threshold-changed', this.panel.thresholds);
+    if (this.panel.thresholds.length === 0) {
+      this.events.emit('delete-singlestat-alert');
+    } else {
+      this.events.emit('singlestat-threshold-changed', this.panel.thresholds);
+    }
     this.render();
   }
 
