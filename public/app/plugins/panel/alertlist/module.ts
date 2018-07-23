@@ -182,7 +182,6 @@ class AlertListPanel extends PanelCtrl {
         }
       }
       if (soundFlag && this.panel.sound) {
-        console.log('Sound playing');
         this.audio.load();
         this.audio.play();
       }
