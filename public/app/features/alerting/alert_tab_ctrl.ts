@@ -48,18 +48,21 @@ export class AlertTabCtrl {
 
   $onInit() {
     this.addNotificationSegment = this.uiSegmentSrv.newPlusButton();
-
-    // subscribe to graph threshold handle changes
-    var thresholdChangedEventHandler = this.graphThresholdChanged.bind(this);
-    this.panelCtrl.events.on('threshold-changed', thresholdChangedEventHandler);
-
-    // set panel alert edit mode
-    this.$scope.$on('$destroy', () => {
-      this.panelCtrl.events.off('threshold-changed', thresholdChangedEventHandler);
-      this.panelCtrl.editingThresholds = false;
-      this.panelCtrl.render();
-    });
-
+    if (this.panel.type === 'graph') {
+      // subscribe to graph threshold handle changes
+      var thresholdChangedEventHandler = this.graphThresholdChanged.bind(this);
+      this.panelCtrl.events.on('threshold-changed', thresholdChangedEventHandler);
+      // set panel alert edit mode
+      this.$scope.$on('$destroy', () => {
+        this.panelCtrl.events.off('threshold-changed', thresholdChangedEventHandler);
+        this.panelCtrl.editingThresholds = false;
+        this.panelCtrl.render();
+      });
+    } else if (this.panel.type === 'singlestat') {
+      this.$scope.$on('$destroy', () => {
+        this.panelCtrl.render();
+      });
+    }
     // build notification model
     this.notifications = [];
     this.alertNotifications = [];
@@ -67,7 +70,6 @@ export class AlertTabCtrl {
 
     return this.backendSrv.get('/api/alert-notifications').then(res => {
       this.notifications = res;
-      console.log('backendSrv response', res);
       this.initModel();
       this.validateModel();
     });
@@ -158,7 +160,6 @@ export class AlertTabCtrl {
     if (!alert) {
       return;
     }
-    console.log('Graph alert', alert);
     alert.conditions = alert.conditions || [];
     if (alert.conditions.length === 0) {
       alert.conditions.push(this.buildDefaultCondition());
@@ -176,14 +177,15 @@ export class AlertTabCtrl {
     this.conditionModels = _.reduce(
       alert.conditions,
       (memo, value) => {
-        console.log('Graph condition values', value);
         memo.push(this.buildConditionModel(value));
         return memo;
       },
       []
     );
-
-    ThresholdMapper.alertToGraphThresholds(this.panel);
+    if (this.panel.type === 'graph') {
+      ThresholdMapper.alertToGraphThresholds(this.panel);
+      this.panelCtrl.editingThresholds = true;
+    }
 
     for (let addedNotification of alert.notifications) {
       var model = _.find(this.notifications, { id: addedNotification.id });
@@ -201,16 +203,17 @@ export class AlertTabCtrl {
       }
     }
 
-    this.panelCtrl.editingThresholds = true;
     this.panelCtrl.render();
   }
 
   graphThresholdChanged(evt) {
-    for (var condition of this.alert.conditions) {
-      if (condition.type === 'query') {
-        condition.evaluator.params[evt.handleIndex] = evt.threshold.value;
-        this.evaluatorParamsChanged();
-        break;
+    if (this.panel.type === 'graph') {
+      for (var condition of this.alert.conditions) {
+        if (condition.type === 'query') {
+          condition.evaluator.params[evt.handleIndex] = evt.threshold.value;
+          this.evaluatorParamsChanged();
+          break;
+        }
       }
     }
   }
@@ -272,7 +275,7 @@ export class AlertTabCtrl {
 
   buildConditionModel(source) {
     var cm: any = { source: source, type: source.type };
-    console.log('graph', source);
+
     cm.queryPart = new QueryPart(source.query, alertDef.alertQueryDef);
     cm.reducerPart = alertDef.createReducerPart(source.reducer);
     cm.evaluator = source.evaluator;
@@ -344,7 +347,9 @@ export class AlertTabCtrl {
       onConfirm: () => {
         delete this.panel.alert;
         this.alert = null;
-        this.panel.thresholds = [];
+        if (this.panel.type === 'graph') {
+          this.panel.thresholds = [];
+        }
         this.conditionModels = [];
         this.panelCtrl.alertState = null;
         this.panelCtrl.render();
@@ -358,7 +363,9 @@ export class AlertTabCtrl {
   }
 
   evaluatorParamsChanged() {
-    ThresholdMapper.alertToGraphThresholds(this.panel);
+    if (this.panel.type === 'graph') {
+      ThresholdMapper.alertToGraphThresholds(this.panel);
+    }
     this.panelCtrl.render();
   }
 

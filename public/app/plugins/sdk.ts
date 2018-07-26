@@ -3,5 +3,5 @@ import { MetricsPanelCtrl } from 'app/features/panel/metrics_panel_ctrl';
 import { QueryCtrl } from 'app/features/panel/query_ctrl';
 import { alertTab } from 'app/features/alerting/alert_tab_ctrl';
 import { loadPluginCss } from 'app/features/plugins/plugin_loader';
-import { alertTabSingleStat } from 'app/features/alerting/alert_tab_singlestat_ctrl';
-export { PanelCtrl, MetricsPanelCtrl, QueryCtrl, alertTab, loadPluginCss, alertTabSingleStat };
+
+export { PanelCtrl, MetricsPanelCtrl, QueryCtrl, alertTab, loadPluginCss };

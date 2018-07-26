@@ -7,7 +7,7 @@ import 'app/features/panellinks/link_srv';
 import kbn from 'app/core/utils/kbn';
 import config from 'app/core/config';
 import TimeSeries from 'app/core/time_series2';
-import { MetricsPanelCtrl, alertTabSingleStat } from 'app/plugins/sdk';
+import { MetricsPanelCtrl, alertTab } from 'app/plugins/sdk';
 
 class SingleStatCtrl extends MetricsPanelCtrl {
   static templateUrl = 'module.html';
@@ -34,6 +34,8 @@ class SingleStatCtrl extends MetricsPanelCtrl {
     { value: 'last_time', text: 'Time of last point' },
   ];
   tableColumnOptions: any;
+  annotationsPromise: any;
+  alertState: any;
 
   // Set and populate defaults
   panelDefaults = {
@@ -74,16 +76,17 @@ class SingleStatCtrl extends MetricsPanelCtrl {
       thresholdLabels: false,
     },
     tableColumn: '',
+    reducedValue: 0,
   };
 
   /** @ngInject */
-  constructor($scope, $injector, private linkSrv) {
+  constructor($scope, $injector, private linkSrv, private annotationsSrv) {
     super($scope, $injector);
     _.defaults(this.panel, this.panelDefaults);
 
     this.events.on('data-received', this.onDataReceived.bind(this));
     this.events.on('data-error', this.onDataError.bind(this));
-    this.events.on('data-snapshot-load', this.onDataReceived.bind(this));
+    this.events.on('data-snapshot-load', this.onDataSnapshotLoad.bind(this));
     this.events.on('init-edit-mode', this.onInitEditMode.bind(this));
 
     this.onSparklineColorChange = this.onSparklineColorChange.bind(this);
@@ -95,7 +98,7 @@ class SingleStatCtrl extends MetricsPanelCtrl {
     this.addEditorTab('Options', 'public/app/plugins/panel/singlestat/editor.html', 2);
     this.addEditorTab('Value Mappings', 'public/app/plugins/panel/singlestat/mappings.html', 3);
     if (config.alertingEnabled) {
-      this.addEditorTab('Alert', alertTabSingleStat, 4);
+      this.addEditorTab('Alert', alertTab, 4);
     }
     this.unitFormats = kbn.getUnitFormats();
   }
@@ -105,8 +108,26 @@ class SingleStatCtrl extends MetricsPanelCtrl {
     this.refresh();
   }
 
+  issueQueries(datasource) {
+    this.annotationsPromise = this.annotationsSrv.getAnnotations({
+      dashboard: this.dashboard,
+      panel: this.panel,
+      range: this.range,
+    });
+    return super.issueQueries(datasource);
+  }
+
   onDataError(err) {
     this.onDataReceived([]);
+  }
+
+  onDataSnapshotLoad(snapshotData) {
+    this.annotationsPromise = this.annotationsSrv.getAnnotations({
+      dashboard: this.dashboard,
+      panel: this.panel,
+      range: this.range,
+    });
+    this.onDataReceived(snapshotData);
   }
 
   onDataReceived(dataList) {
@@ -121,17 +142,15 @@ class SingleStatCtrl extends MetricsPanelCtrl {
       this.setValues(data);
     }
     this.data = data;
-    this.render();
-  }
-
-  onThresholdChanged() {
-    console.log('new threshold values', this.panel.thresholds);
-    if (this.panel.thresholds.length === 0) {
-      this.events.emit('delete-singlestat-alert');
-    } else {
-      this.events.emit('singlestat-threshold-changed', this.panel.thresholds);
-    }
-    this.render();
+    this.annotationsPromise.then(
+      result => {
+        this.alertState = result.alertState;
+        this.render();
+      },
+      () => {
+        this.render();
+      }
+    );
   }
 
   seriesHandler(seriesData) {
@@ -139,7 +158,6 @@ class SingleStatCtrl extends MetricsPanelCtrl {
       datapoints: seriesData.datapoints || [],
       alias: seriesData.target,
     });
-
     series.flotpairs = series.getFlotPairs(this.panel.nullPointMode);
     return series;
   }
@@ -336,6 +354,7 @@ class SingleStatCtrl extends MetricsPanelCtrl {
       data.scopedVars = _.extend({}, this.panel.scopedVars);
       data.scopedVars['__name'] = { value: this.series[0].label };
     }
+    this.panel.reducedValue = data.value;
     this.setValueMapping(data);
   }
 
@@ -628,7 +647,6 @@ class SingleStatCtrl extends MetricsPanelCtrl {
         return;
       }
       data = ctrl.data;
-
       // get thresholds
       data.thresholds = panel.thresholds.split(',').map(function(strVale) {
         return Number(strVale.trim());

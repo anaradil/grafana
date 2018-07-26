@@ -22,6 +22,10 @@ describe('SingleStatCtrl', function() {
 
         beforeEach(ctx.providePhase());
         beforeEach(ctx.createPanelController(SingleStatCtrl));
+        beforeEach(() => {
+          ctx.ctrl.annotationsPromise = Promise.resolve({});
+          ctx.ctrl.updateTimeRange();
+        });
 
         beforeEach(function() {
           setupFunc();
