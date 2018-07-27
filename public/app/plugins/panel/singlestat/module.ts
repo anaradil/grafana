@@ -76,7 +76,6 @@ class SingleStatCtrl extends MetricsPanelCtrl {
       thresholdLabels: false,
     },
     tableColumn: '',
-    reducedValue: 0,
   };
 
   /** @ngInject */
@@ -158,6 +157,7 @@ class SingleStatCtrl extends MetricsPanelCtrl {
       datapoints: seriesData.datapoints || [],
       alias: seriesData.target,
     });
+
     series.flotpairs = series.getFlotPairs(this.panel.nullPointMode);
     return series;
   }
@@ -354,7 +354,6 @@ class SingleStatCtrl extends MetricsPanelCtrl {
       data.scopedVars = _.extend({}, this.panel.scopedVars);
       data.scopedVars['__name'] = { value: this.series[0].label };
     }
-    this.panel.reducedValue = data.value;
     this.setValueMapping(data);
   }
 
@@ -647,6 +646,7 @@ class SingleStatCtrl extends MetricsPanelCtrl {
         return;
       }
       data = ctrl.data;
+
       // get thresholds
       data.thresholds = panel.thresholds.split(',').map(function(strVale) {
         return Number(strVale.trim());

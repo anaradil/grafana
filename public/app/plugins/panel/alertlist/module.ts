@@ -17,11 +17,20 @@ class AlertListPanel extends PanelCtrl {
     { text: 'Importance', value: 3 },
   ];
 
+  soundOptions = [
+    { text: 'sound1', value: 'public/sound/sound1.mp3' },
+    { text: 'sound2', value: 'public/sound/sound2.mp3' },
+    { text: 'sound3', value: 'public/sound/sound3.mp3' },
+    { text: 'sound4', value: 'public/sound/sound4.mp3' },
+    { text: 'sound5', value: 'public/sound/sound5.mp3' },
+  ];
+
   stateFilter: any = {};
   currentAlerts: any = [];
   alertHistory: any = [];
   noAlertsMessage: string;
   audio: any;
+  soundFile: any;
   lastRefreshAt: any;
 
   // Set and populate defaults
@@ -35,6 +44,7 @@ class AlertListPanel extends PanelCtrl {
     nameFilter: '',
     folderId: null,
     sound: false,
+    soundFile: 'public/sound/sound1.mp3',
   };
 
   /** @ngInject */
@@ -50,8 +60,16 @@ class AlertListPanel extends PanelCtrl {
     }
 
     this.audio = new Audio();
-    this.audio.src = 'public/sound/sound1.mp3';
+    this.audio.src = this.panel.soundFile;
+    this.audio.load();
     this.lastRefreshAt = moment();
+  }
+
+  updateSoundFile() {
+    this.audio.src = this.panel.soundFile;
+    this.audio.load();
+    this.audio.play();
+    this.onRefresh();
   }
 
   sortResult(alerts) {

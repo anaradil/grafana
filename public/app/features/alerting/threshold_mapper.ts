@@ -1,9 +1,4 @@
 export class ThresholdMapper {
-  static alertToSingleStatThresholds(panel) {
-    console.log('Threshold Mapper', panel.alert.conditions);
-
-    return true;
-  }
   static alertToGraphThresholds(panel) {
     for (var i = 0; i < panel.alert.conditions.length; i++) {
       let condition = panel.alert.conditions[i];

@@ -358,6 +358,10 @@ export class AlertTabCtrl {
   }
 
   enable() {
+    if (this.panel.type === 'singlestat' && this.panelCtrl.dataType !== 'timeseries') {
+      alert('Data must be formatted as time series');
+      return;
+    }
     this.panel.alert = {};
     this.initModel();
   }

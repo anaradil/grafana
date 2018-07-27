@@ -135,6 +135,7 @@ func AlertTest(c *m.ReqContext, dto dtos.AlertTestCommand) Response {
 		Dashboard: dto.Dashboard,
 		PanelId:   dto.PanelId,
 	}
+
 	if err := bus.Dispatch(&backendCmd); err != nil {
 		if validationErr, ok := err.(alerting.ValidationError); ok {
 			return Error(422, validationErr.Error(), nil)
