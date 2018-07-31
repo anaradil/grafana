@@ -18,11 +18,11 @@ class AlertListPanel extends PanelCtrl {
   ];
 
   soundOptions = [
-    { text: 'sound1', value: 'public/sound/sound1.mp3' },
-    { text: 'sound2', value: 'public/sound/sound2.mp3' },
-    { text: 'sound3', value: 'public/sound/sound3.mp3' },
-    { text: 'sound4', value: 'public/sound/sound4.mp3' },
-    { text: 'sound5', value: 'public/sound/sound5.mp3' },
+    { text: 'Springboard', value: 'public/sound/sound1' },
+    { text: 'Breaking glass', value: 'public/sound/sound2' },
+    { text: 'Decay', value: 'public/sound/sound3' },
+    { text: 'Strike', value: 'public/sound/sound4' },
+    { text: 'System fault', value: 'public/sound/sound5' },
   ];
 
   stateFilter: any = {};
@@ -44,7 +44,7 @@ class AlertListPanel extends PanelCtrl {
     nameFilter: '',
     folderId: null,
     sound: false,
-    soundFile: 'public/sound/sound1.mp3',
+    soundFile: 'public/sound/sound1',
   };
 
   /** @ngInject */
@@ -60,16 +60,30 @@ class AlertListPanel extends PanelCtrl {
     }
 
     this.audio = new Audio();
-    this.audio.src = this.panel.soundFile;
-    this.audio.load();
+    this.setSoundFile();
     this.lastRefreshAt = moment();
   }
 
   updateSoundFile() {
-    this.audio.src = this.panel.soundFile;
-    this.audio.load();
-    this.audio.play();
+    this.setSoundFile();
+    this.playSound();
     this.onRefresh();
+  }
+
+  setSoundFile() {
+    if (this.audio.canPlayType('audio/mpeg') === '') {
+      this.audio.src = this.panel.soundFile + '.ogg';
+    } else {
+      this.audio.src = this.panel.soundFile + '.mp3';
+    }
+    this.audio.load();
+  }
+
+  playSound() {
+    var playPromise = this.audio.play();
+    if (playPromise !== undefined) {
+      playPromise.then(function() {}).catch(function(error) {});
+    }
   }
 
   sortResult(alerts) {
@@ -201,7 +215,7 @@ class AlertListPanel extends PanelCtrl {
       }
       if (soundFlag && this.panel.sound) {
         this.audio.load();
-        this.audio.play();
+        this.playSound();
       }
       return this.currentAlerts;
     });
