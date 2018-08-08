@@ -23,7 +23,8 @@ export class DashboardCtrl implements PanelContainer {
     private unsavedChangesSrv,
     private dashboardViewStateSrv,
     public playlistSrv,
-    private panelLoader
+    private panelLoader,
+    private $window
   ) {
     // temp hack due to way dashboards are loaded
     // can't use controllerAs on route yet
@@ -168,10 +169,44 @@ export class DashboardCtrl implements PanelContainer {
     this.dashboard.removePanel(panel);
   }
 
+  getUpdates() {
+    if (this.dashboard.id === null || !this.dashboard.updateFlag) {
+      return;
+    }
+    this.dashboardSrv.needsRefresh(this.dashboard).then(flag => {
+      if (flag) {
+        if (this.unsavedChangesSrv.tracker.hasChanges()) {
+          this.$rootScope.appEvent('confirm-modal', {
+            title: 'Conflict',
+            text: 'Dashboard is about to be updated',
+            text2: 'Would you like to accept changes (and lose progress)',
+            yesText: 'Accept changes',
+            icon: 'fa-warning',
+            onConfirm: () => {
+              this.$window.location.reload();
+            },
+            onReject: () => {
+              this.dashboard.updateFlag = false;
+              return;
+            },
+          });
+        } else {
+          this.$window.location.reload();
+        }
+      }
+    });
+  }
+
+  propagateVersion() {
+    this.dashboardSrv.updateVersion(this.dashboard);
+  }
+
   init(dashboard) {
     this.$scope.onAppEvent('show-json-editor', this.showJsonEditor.bind(this));
     this.$scope.onAppEvent('template-variable-value-updated', this.templateVariableUpdated.bind(this));
     this.$scope.onAppEvent('panel-remove', this.onRemovingPanel.bind(this));
+    this.$scope.onAppEvent('get-updates', this.getUpdates.bind(this));
+    this.$scope.onAppEvent('propagate-version', this.propagateVersion.bind(this));
     this.setupDashboard(dashboard);
   }
 }

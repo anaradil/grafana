@@ -40,6 +40,9 @@
 		<button class="btn navbar-button navbar-button--settings" ng-click="ctrl.toggleSettings()" bs-tooltip="'Settings'" data-placement="bottom" ng-show="ctrl.dashboard.meta.showSettings">
 			<i class="fa fa-cog"></i>
 		</button>
+        <button class="btn navbar-button" ng-click="ctrl.propagateVersion()">
+            <i class="gicon fa fa-angle-double-right"></i>
+        </button>
 	</div>
 
 	<gf-time-picker class="gf-timepicker-nav" dashboard="ctrl.dashboard" ng-if="!ctrl.dashboard.timepicker.hidden"></gf-time-picker>

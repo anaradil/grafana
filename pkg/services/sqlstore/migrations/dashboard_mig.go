@@ -117,6 +117,10 @@ func addDashboardMigration(mg *Migrator) {
 		Name: "plugin_id", Type: DB_NVarchar, Nullable: true, Length: 189,
 	}))
 
+    //add column to store latest propagated version
+    mg.AddMigration("Add column to store latest propagated version", NewAddColumnMigration(dashboardV2, &Column{
+        Name:"latest_version", Type: DB_Int, Nullable: true,
+  }))
 	mg.AddMigration("Add index for plugin_id in dashboard", NewAddIndexMigration(dashboardV2, &Index{
 		Cols: []string{"org_id", "plugin_id"}, Type: IndexType,
 	}))

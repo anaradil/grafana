@@ -8,6 +8,20 @@ export class DashboardSrv {
   /** @ngInject */
   constructor(private backendSrv, private $rootScope, private $location) {}
 
+  needsRefresh(dashboard) {
+    return this.backendSrv.get(`api/latest-version/${dashboard.id}`).then(result => {
+      return parseInt(result) > parseInt(dashboard.version);
+    });
+  }
+
+  updateVersion(dashboard) {
+    const args = {
+      dashboardId: dashboard.id,
+      latestVersion: dashboard.version,
+    };
+    this.backendSrv.post(`/api/update-latest-version/${dashboard.id}`, args).then(() => {});
+  }
+
   create(dashboard, meta) {
     return new DashboardModel(dashboard, meta);
   }
@@ -101,6 +115,7 @@ export class DashboardSrv {
   }
 
   saveDashboard(options?, clone?) {
+    this.dash.updateFlag = true;
     if (clone) {
       this.setCurrent(this.create(clone, this.dash.meta));
     }

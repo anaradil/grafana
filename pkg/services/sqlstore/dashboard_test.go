@@ -323,6 +323,25 @@ func TestDashboardDataAccess(t *testing.T) {
 					So(query.Result[0].Title, ShouldEqual, "starred dash")
 				})
 			})
+
+			Convey("Should be able to update latest version of dashboard", func() {
+				query := m.UpdateLatestVersionCommand{
+					DashboardId:   savedDash.Id,
+					LatestVersion: savedDash.Version,
+				}
+				err := UpdateLatestVersion(&query)
+
+				So(err, ShouldBeNil)
+			})
+
+			Convey("Should be able to get latest version of dashboard", func() {
+				query := m.GetLatestVersionCommand{
+					DashboardId: savedDash.Id,
+				}
+				err := GetLatestVersion(&query)
+				So(err, ShouldBeNil)
+				So(query.Result, ShouldEqual, savedDash.LatestVersion)
+			})
 		})
 
 		Convey("Given a plugin with imported dashboards", func() {

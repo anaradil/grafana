@@ -44,6 +44,7 @@ export class DashboardModel {
   iteration: number;
   meta: any;
   events: Emitter;
+  updateFlag: any;
 
   static nonPersistedProperties: { [str: string]: boolean } = {
     events: true,
@@ -58,7 +59,6 @@ export class DashboardModel {
     if (!data) {
       data = {};
     }
-
     this.events = new Emitter();
     this.id = data.id || null;
     this.uid = data.uid || null;
@@ -91,6 +91,8 @@ export class DashboardModel {
 
     this.addBuiltInAnnotationQuery();
     this.sortPanelsByGridPos();
+
+    this.updateFlag = true;
   }
 
   addBuiltInAnnotationQuery() {

@@ -25,6 +25,8 @@ func init() {
 	bus.AddHandler("sql", GetDashboardsBySlug)
 	bus.AddHandler("sql", ValidateDashboardBeforeSave)
 	bus.AddHandler("sql", HasEditPermissionInFolders)
+	bus.AddHandler("sql", UpdateLatestVersion)
+	bus.AddHandler("sql", GetLatestVersion)
 }
 
 var generateNewUid func() string = util.GenerateShortUid
@@ -637,5 +639,32 @@ func HasEditPermissionInFolders(query *m.HasEditPermissionInFoldersQuery) error 
 
 	query.Result = len(resp) > 0 && resp[0].Count > 0
 
+	return nil
+}
+
+func UpdateLatestVersion(cmd *m.UpdateLatestVersionCommand) error {
+	return inTransaction(func(sess *DBSession) error {
+		var rawSql = `UPDATE dashboard SET latest_version=? WHERE id=?`
+		_, err := sess.Exec(rawSql, cmd.LatestVersion, cmd.DashboardId)
+		return err
+	})
+}
+
+type DashboardLatestVersion struct {
+	LatestVersion int
+}
+
+func GetLatestVersion(cmd *m.GetLatestVersionCommand) error {
+	var rawSql = `SELECT latest_version FROM dashboard WHERE id=?`
+	var result = DashboardLatestVersion{}
+	exists, err := x.Sql(rawSql, cmd.DashboardId).Get(&result)
+
+	if err != nil {
+		return err
+	} else if !exists {
+		return m.ErrDashboardNotFound
+	}
+
+	cmd.Result = result.LatestVersion
 	return nil
 }

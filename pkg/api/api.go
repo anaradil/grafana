@@ -385,6 +385,10 @@ func (hs *HTTPServer) registerRoutes() {
 	// Websocket
 	r.Any("/ws", hs.streamManager.Serve)
 
+	// Propagate updated dashboard
+	r.Post("/api/update-latest-version/:id", reqOrgAdmin, bind(m.UpdateLatestVersionCommand{}), Wrap(UpdateLatestVersion))
+	r.Get("/api/latest-version/:id", bind(m.GetLatestVersionCommand{}), Wrap(GetLatestVersion))
+
 	// streams
 	//r.Post("/api/streams/push", reqSignedIn, bind(dtos.StreamMessage{}), liveConn.PushToStream)
 }

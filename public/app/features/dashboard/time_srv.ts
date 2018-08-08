@@ -137,6 +137,7 @@ export class TimeSrv {
 
   refreshDashboard() {
     this.$rootScope.$broadcast('refresh');
+    this.$rootScope.$broadcast('get-updates');
   }
 
   private startNextRefreshTimer(afterMs) {

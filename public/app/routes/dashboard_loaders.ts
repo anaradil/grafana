@@ -5,7 +5,6 @@ export class LoadDashboardCtrl {
   /** @ngInject */
   constructor($scope, $routeParams, dashboardLoaderSrv, backendSrv, $location, $browser) {
     $scope.appEvent('dashboard-fetch-start');
-
     if (!$routeParams.uid && !$routeParams.slug) {
       backendSrv.get('/api/dashboards/home').then(function(homeDash) {
         if (homeDash.redirectUri) {

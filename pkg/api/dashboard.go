@@ -502,3 +502,21 @@ func GetDashboardTags(c *m.ReqContext) {
 
 	c.JSON(200, query.Result)
 }
+
+//UpdateLatestVersion updates latest propagated version of dashboard
+func UpdateLatestVersion(c *m.ReqContext, cmd m.UpdateLatestVersionCommand) Response {
+	cmd.DashboardId = c.ParamsInt64(":id")
+	if err := bus.Dispatch(&cmd); err != nil {
+		return Error(500, "Failed to propagate updates", err)
+	}
+	return Success("Updates are propagated")
+}
+
+//GetLatestVersion returns latest propagated version of dashboard
+func GetLatestVersion(c *m.ReqContext, cmd m.GetLatestVersionCommand) Response {
+	cmd.DashboardId = c.ParamsInt64(":id")
+	if err := bus.Dispatch(&cmd); err != nil {
+		return Error(500, "Failed to get updates", err)
+	}
+	return JSON(200, cmd.Result)
+}

@@ -21,6 +21,10 @@ export class DashNavCtrl {
     }
   }
 
+  propagateVersion() {
+    this.$scope.$emit('propagate-version');
+  }
+
   toggleSettings() {
     let search = this.$location.search();
     if (search.editview) {

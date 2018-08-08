@@ -61,12 +61,17 @@ export class UtilSrv {
       scope.confirmTextValid = payload.confirmText.toLowerCase() === value.toLowerCase();
     };
 
+    scope.onReject = function() {
+      payload.onReject();
+      scope.dismiss();
+    };
     scope.title = payload.title;
     scope.text = payload.text;
     scope.text2 = payload.text2;
     scope.confirmText = payload.confirmText;
 
     scope.onConfirm = payload.onConfirm;
+    scope.onReject = payload.onReject;
     scope.onAltAction = payload.onAltAction;
     scope.altActionText = payload.altActionText;
     scope.icon = payload.icon || 'fa-check';

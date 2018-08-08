@@ -72,6 +72,8 @@ type Dashboard struct {
 
 	Title string
 	Data  *simplejson.Json
+
+	LatestVersion int
 }
 
 func (d *Dashboard) SetId(id int64) {
@@ -107,6 +109,7 @@ func NewDashboard(title string) *Dashboard {
 	dash.Created = time.Now()
 	dash.Updated = time.Now()
 	dash.UpdateSlug()
+	dash.LatestVersion = 0
 	return dash
 }
 
@@ -154,6 +157,8 @@ func NewDashboardFromJson(data *simplejson.Json) *Dashboard {
 	if gnetId, err := dash.Data.Get("gnetId").Float64(); err == nil {
 		dash.GnetId = int64(gnetId)
 	}
+
+	dash.LatestVersion = 0
 
 	return dash
 }
@@ -357,4 +362,15 @@ type DashboardRef struct {
 type GetDashboardRefByIdQuery struct {
 	Id     int64
 	Result *DashboardRef
+}
+
+type UpdateLatestVersionCommand struct {
+	DashboardId   int64 `json:"dashboardId"`
+	LatestVersion int   `json: "latestVersion"`
+}
+
+type GetLatestVersionCommand struct {
+	DashboardId int64
+
+	Result int
 }
